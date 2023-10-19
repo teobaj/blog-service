@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import * as userController from './controllers';
+import { validateUser } from './validator';
+import { User } from './types';
 
 const router: Router = Router();
 
@@ -21,9 +23,23 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 router.post('/', async (req: Request, res: Response) => {
-  const user = req.body;
-  console.log(user);
-  res.json({ ok: 'ok' });
+  try {
+    const user = req.body;
+    const [success, error] = await userController.addUser(user as Omit<User, 'id'>);
+    if (!success) {
+      res.status(409).json({
+        error: error!.message,
+      });
+      return;
+    }
+    res.json({
+      success,
+    });
+    return;
+  } catch (e: any) {
+    res.status(400).json({ message: e.message });
+    return;
+  }
 });
 
 export { router };
